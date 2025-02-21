@@ -1,9 +1,13 @@
-<%@ page language="java" contentType="text/html; charset=UTF-8" %>
+<%@ page import="java.time.LocalTime" %>
 <html>
 <head>
-    <title>Welcome Page</title>
+    <title>Greeting Page</title>
 </head>
 <body>
-    <h1>Welcome to COMP367</h1>
+    <%
+        LocalTime currentTime = LocalTime.now();
+        String greeting = (currentTime.getHour() < 12) ? "Good morning" : "Good afternoon";
+    %>
+    <h1><%= greeting %>, Hari Bahadur! Welcome to COMP367</h1>
 </body>
 </html>
