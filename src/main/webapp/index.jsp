@@ -8,6 +8,6 @@
         LocalTime currentTime = LocalTime.now();
         String greeting = (currentTime.getHour() < 12) ? "Good morning" : "Good afternoon";
     %>
-    <h1><%= greeting %>, Hari Bahadur! Welcome to COMP367</h1>
+    <h1><%= greeting %>, Sujan Chaudhari! Welcome to COMP367</h1>
 </body>
 </html>
