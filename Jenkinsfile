@@ -17,7 +17,5 @@ pipeline {
                 echo "Deploying the application..."
             }
         }
-    }
-}
-
-}
+    }  // ✅ Correctly closing stages block
+}  // ✅ Correctly closing pipeline block
