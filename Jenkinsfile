@@ -4,8 +4,7 @@ pipeline {
     environment {
         DOCKER_IMAGE = 'sujan958/maven-java-app'
         DOCKER_CREDENTIALS_ID = 'docker-hub-credentials'
-        MAVEN_HOME = '/opt/homebrew/bin' // Correct Maven path
-        PATH = "${MAVEN_HOME}:${PATH}"
+        PATH = "/opt/homebrew/bin:${PATH}" // Add Homebrew bin to PATH
     }
 
     stages {
@@ -17,7 +16,7 @@ pipeline {
 
         stage('Build Maven Project') {
             steps {
-                sh 'mvn clean package' // Just use 'mvn', not '${MAVEN_HOME}/mvn'
+                sh 'mvn clean package' // Just use 'mvn', do NOT use a full path
             }
         }
 
