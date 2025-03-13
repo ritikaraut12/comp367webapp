@@ -3,9 +3,9 @@ pipeline {
 
     environment {
         DOCKER_IMAGE = 'sujan958/maven-java-app'
-        DOCKER_CREDENTIALS_ID = 'docker-hub-credentials' // Add this in Jenkins
-        MAVEN_HOME = '/opt/homebrew/bin/mvn' // Set Maven path explicitly
-        PATH = "${MAVEN_HOME}:${PATH}" // Ensure Jenkins can find Maven
+        DOCKER_CREDENTIALS_ID = 'docker-hub-credentials'
+        MAVEN_HOME = '/opt/homebrew/bin' // Correct Maven path
+        PATH = "${MAVEN_HOME}:${PATH}"
     }
 
     stages {
@@ -17,7 +17,7 @@ pipeline {
 
         stage('Build Maven Project') {
             steps {
-                sh '${MAVEN_HOME}/mvn clean package' // Use explicit Maven path
+                sh 'mvn clean package' // Just use 'mvn', not '${MAVEN_HOME}/mvn'
             }
         }
 
