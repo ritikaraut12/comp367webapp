@@ -4,17 +4,36 @@ pipeline {
     environment {
         DOCKER_IMAGE = 'sujan958/maven-java-app'
         DOCKER_CREDENTIALS_ID = 'docker-hub-credentials'
+        // We still set PATH for Maven and other commands, but for Docker we'll use DOCKER_CMD.
         PATH = "/usr/local/bin:/opt/homebrew/bin:/usr/bin:/bin:/usr/sbin:/sbin"
-        DOCKER_HOST = "unix:///Users/mac/.docker/run/docker.sock" // Explicitly set Docker socket
+        // Explicitly set the Docker socket (if required)
+        DOCKER_HOST = "unix:///Users/mac/.docker/run/docker.sock"
+        // Set the full Docker command path
+        DOCKER_CMD = "/Applications/Docker.app/Contents/Resources/bin/docker"
     }
 
     stages {
+        stage('Checkout') {
+            steps {
+                // Checkout source code from the SCM configured for this job
+                checkout scm
+            }
+        }
+
+        stage('Build Maven Project') {
+            steps {
+                // Build the Maven project (ensure Maven is installed and in PATH)
+                sh 'mvn clean package'
+            }
+        }
+
         stage('Docker Debug') {
             steps {
-                sh 'whoami' // Check Jenkins user
-                sh 'echo $PATH' // Debug PATH
-                sh 'docker --version' // Ensure Jenkins finds Docker
-                sh 'docker ps' // Verify Docker access
+                // Debug output to verify environment variables and Docker command access
+                sh 'whoami'
+                sh 'echo $PATH'
+                sh '${DOCKER_CMD} --version'
+                sh '${DOCKER_CMD} ps'
             }
         }
 
@@ -22,7 +41,7 @@ pipeline {
             steps {
                 withDockerRegistry([credentialsId: DOCKER_CREDENTIALS_ID, url: '']) {
                     sh 'echo "Attempting to log in to Docker Hub..."'
-                    sh 'docker login -u $DOCKER_USER -p $DOCKER_PASS'
+                    sh '${DOCKER_CMD} login -u $DOCKER_USER -p $DOCKER_PASS'
                     sh 'echo "Login Successful"'
                 }
             }
@@ -30,13 +49,15 @@ pipeline {
 
         stage('Docker Build') {
             steps {
-                sh "docker build -t ${DOCKER_IMAGE} ."
+                // Build the Docker image using the Dockerfile in the project root
+                sh "${DOCKER_CMD} build -t ${DOCKER_IMAGE} ."
             }
         }
 
         stage('Docker Push') {
             steps {
-                sh "docker push ${DOCKER_IMAGE}"
+                // Push the Docker image to Docker Hub
+                sh "${DOCKER_CMD} push ${DOCKER_IMAGE}"
             }
         }
     }
