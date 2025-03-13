@@ -5,7 +5,8 @@ pipeline {
         // Docker image name and tag
         DOCKER_IMAGE = 'sujan958/maven-java-app:latest'
         // Docker command path (ensure this is correct for your system)
-        DOCKER_CMD = '/usr/bin/docker' // Updated to a more common path
+        DOCKER_CMD = '/Applications/Docker.app/Contents/Resources/bin/docker'
+ // Updated to a more common path
         // Docker Hub credentials (use Jenkins credentials ID)
         DOCKER_CREDENTIALS_ID = 'docker-hub-credentials' // Replace with your Jenkins credentials ID
     }
