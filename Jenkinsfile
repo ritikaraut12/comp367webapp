@@ -4,8 +4,8 @@ pipeline {
     environment {
         DOCKER_IMAGE = 'sujan958/maven-java-app'
         DOCKER_CREDENTIALS_ID = 'docker-hub-credentials'
-        DOCKER_HOST = "unix:///Users/mac/.docker/run/docker.sock" // Explicitly set Docker socket
-        PATH = "/usr/local/bin:/opt/homebrew/bin:/usr/bin:/bin:/usr/sbin:/sbin" // Ensure Jenkins finds Docker
+        PATH = "/usr/local/bin:/opt/homebrew/bin:/usr/bin:/bin:/usr/sbin:/sbin"
+        DOCKER_HOST = "unix:///Users/mac/.docker/run/docker.sock" // Ensure Jenkins uses the correct Docker socket
     }
 
     stages {
@@ -13,8 +13,8 @@ pipeline {
             steps {
                 sh 'whoami' // Check Jenkins user
                 sh 'echo $PATH' // Debug PATH
-                sh 'docker --version' // Ensure Jenkins finds Docker
-                sh 'docker ps' // Verify Docker access
+                sh '/usr/local/bin/docker --version' // Ensure Jenkins finds Docker
+                sh '/usr/local/bin/docker ps' // Verify Docker access
             }
         }
 
@@ -22,7 +22,7 @@ pipeline {
             steps {
                 withDockerRegistry([credentialsId: DOCKER_CREDENTIALS_ID, url: '']) {
                     sh 'echo "Attempting to log in to Docker Hub..."'
-                    sh 'docker login -u $DOCKER_USER -p $DOCKER_PASS'
+                    sh '/usr/local/bin/docker login -u $DOCKER_USER -p $DOCKER_PASS'
                     sh 'echo "Login Successful"'
                 }
             }
@@ -30,13 +30,13 @@ pipeline {
 
         stage('Docker Build') {
             steps {
-                sh "docker build -t ${DOCKER_IMAGE} ."
+                sh "/usr/local/bin/docker build -t ${DOCKER_IMAGE} ."
             }
         }
 
         stage('Docker Push') {
             steps {
-                sh "docker push ${DOCKER_IMAGE}"
+                sh "/usr/local/bin/docker push ${DOCKER_IMAGE}"
             }
         }
     }
