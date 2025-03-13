@@ -2,10 +2,12 @@ pipeline {
     agent any
 
     environment {
-        // Adjust these as needed:
-        DOCKER_IMAGE = 'sujan958/maven-java-app'
-        // Path to Docker on your system:
-        DOCKER_CMD = '/Applications/Docker.app/Contents/Resources/bin/docker'
+        // Docker image name and tag
+        DOCKER_IMAGE = 'sujan958/maven-java-app:latest'
+        // Docker command path (ensure this is correct for your system)
+        DOCKER_CMD = '/usr/bin/docker' // Updated to a more common path
+        // Docker Hub credentials (use Jenkins credentials ID)
+        DOCKER_CREDENTIALS_ID = 'docker-hub-credentials' // Replace with your Jenkins credentials ID
     }
 
     stages {
@@ -25,24 +27,28 @@ pipeline {
 
         stage('Docker Debug') {
             steps {
-                // Force PATH to include /usr/local/bin, etc.
-                withEnv(["PATH=/usr/local/bin:/opt/homebrew/bin:/usr/bin:/bin:/usr/sbin:/sbin"]) {
-                    sh 'whoami'
-                    sh 'echo "PATH is: $PATH"'
-                    sh "${DOCKER_CMD} --version"
-                    sh "${DOCKER_CMD} ps"
-                }
+                // Debugging: Check Docker setup
+                sh 'echo "Current user: $(whoami)"'
+                sh 'echo "PATH is: $PATH"'
+                sh "${DOCKER_CMD} --version"
+                sh "${DOCKER_CMD} images"
+                sh "${DOCKER_CMD} ps -a"
             }
         }
 
         stage('Docker Login') {
             steps {
-                // Manual login to Docker Hub
-                withEnv(["PATH=/usr/local/bin:/opt/homebrew/bin:/usr/bin:/bin:/usr/sbin:/sbin"]) {
-                    sh 'echo "Attempting to log in to Docker Hub..."'
-                    // Replace $DOCKER_USER and $DOCKER_PASS with your environment variables or Jenkins credentials
-                    sh "${DOCKER_CMD} login -u $DOCKER_USER -p $DOCKER_PASS"
-                    sh 'echo "Login Successful"'
+                // Log in to Docker Hub using Jenkins credentials
+                withCredentials([usernamePassword(
+                    credentialsId: env.DOCKER_CREDENTIALS_ID,
+                    usernameVariable: 'DOCKER_USER',
+                    passwordVariable: 'DOCKER_PASS'
+                )]) {
+                    sh """
+                        echo "Attempting to log in to Docker Hub..."
+                        ${DOCKER_CMD} login -u ${DOCKER_USER} -p ${DOCKER_PASS}
+                        echo "Login Successful"
+                    """
                 }
             }
         }
@@ -50,19 +56,28 @@ pipeline {
         stage('Docker Build') {
             steps {
                 // Build the Docker image
-                withEnv(["PATH=/usr/local/bin:/opt/homebrew/bin:/usr/bin:/bin:/usr/sbin:/sbin"]) {
-                    sh "${DOCKER_CMD} build -t ${DOCKER_IMAGE} ."
-                }
+                sh "${DOCKER_CMD} build -t ${DOCKER_IMAGE} ."
             }
         }
 
         stage('Docker Push') {
             steps {
-                // Push the Docker image
-                withEnv(["PATH=/usr/local/bin:/opt/homebrew/bin:/usr/bin:/bin:/usr/sbin:/sbin"]) {
-                    sh "${DOCKER_CMD} push ${DOCKER_IMAGE}"
-                }
+                // Push the Docker image to Docker Hub
+                sh "${DOCKER_CMD} push ${DOCKER_IMAGE}"
             }
+        }
+    }
+
+    post {
+        success {
+            echo "Pipeline completed successfully!"
+        }
+        failure {
+            echo "Pipeline failed. Check the logs for details."
+        }
+        cleanup {
+            // Clean up Docker resources (optional)
+            sh "${DOCKER_CMD} system prune -f"
         }
     }
 }
