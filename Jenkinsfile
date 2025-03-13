@@ -4,7 +4,8 @@ pipeline {
     environment {
         DOCKER_IMAGE = 'sujan958/maven-java-app'
         DOCKER_CREDENTIALS_ID = 'docker-hub-credentials'
-        PATH = "/opt/homebrew/bin:${PATH}" // Add Homebrew bin to PATH
+        DOCKER_PATH = '/usr/local/bin/docker' // Explicit Docker path
+        PATH = "/usr/local/bin:/opt/homebrew/bin:${PATH}" // Ensure Jenkins finds Docker
     }
 
     stages {
@@ -14,29 +15,34 @@ pipeline {
             }
         }
 
-        stage('Build Maven Project') {
+        stage('Docker Debug') {
             steps {
-                sh 'mvn clean package' // Just use 'mvn', do NOT use a full path
+                sh 'whoami' // Verify user running Jenkins
+                sh 'echo $PATH' // Show Jenkins PATH
+                sh '${DOCKER_PATH} --version' // Ensure Jenkins finds Docker
+                sh '${DOCKER_PATH} ps' // Verify Docker access
             }
         }
 
         stage('Docker Login') {
             steps {
                 withDockerRegistry([credentialsId: DOCKER_CREDENTIALS_ID, url: '']) {
-                    sh 'echo Logged into Docker Hub'
+                    sh 'echo "Attempting to log in to Docker Hub..."'
+                    sh '${DOCKER_PATH} login -u $DOCKER_USER -p $DOCKER_PASS'
+                    sh 'echo "Login Successful"'
                 }
             }
         }
 
         stage('Docker Build') {
             steps {
-                sh "docker build -t ${DOCKER_IMAGE} ."
+                sh "${DOCKER_PATH} build -t ${DOCKER_IMAGE} ."
             }
         }
 
         stage('Docker Push') {
             steps {
-                sh "docker push ${DOCKER_IMAGE}"
+                sh "${DOCKER_PATH} push ${DOCKER_IMAGE}"
             }
         }
     }
