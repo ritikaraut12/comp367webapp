@@ -4,23 +4,17 @@ pipeline {
     environment {
         DOCKER_IMAGE = 'sujan958/maven-java-app'
         DOCKER_CREDENTIALS_ID = 'docker-hub-credentials'
-        DOCKER_PATH = '/usr/local/bin/docker' // Explicit Docker path
-        PATH = "/usr/local/bin:/opt/homebrew/bin:${PATH}" // Ensure Jenkins finds Docker
+        DOCKER_HOST = "unix:///Users/mac/.docker/run/docker.sock" // Explicitly set Docker socket
+        PATH = "/usr/local/bin:/opt/homebrew/bin:/usr/bin:/bin:/usr/sbin:/sbin" // Ensure Jenkins finds Docker
     }
 
     stages {
-        stage('Checkout') {
-            steps {
-                git branch: 'main', url: 'https://github.com/SujanChaudhari/comp367app.git'
-            }
-        }
-
         stage('Docker Debug') {
             steps {
-                sh 'whoami' // Verify user running Jenkins
-                sh 'echo $PATH' // Show Jenkins PATH
-                sh '${DOCKER_PATH} --version' // Ensure Jenkins finds Docker
-                sh '${DOCKER_PATH} ps' // Verify Docker access
+                sh 'whoami' // Check Jenkins user
+                sh 'echo $PATH' // Debug PATH
+                sh 'docker --version' // Ensure Jenkins finds Docker
+                sh 'docker ps' // Verify Docker access
             }
         }
 
@@ -28,7 +22,7 @@ pipeline {
             steps {
                 withDockerRegistry([credentialsId: DOCKER_CREDENTIALS_ID, url: '']) {
                     sh 'echo "Attempting to log in to Docker Hub..."'
-                    sh '${DOCKER_PATH} login -u $DOCKER_USER -p $DOCKER_PASS'
+                    sh 'docker login -u $DOCKER_USER -p $DOCKER_PASS'
                     sh 'echo "Login Successful"'
                 }
             }
@@ -36,13 +30,13 @@ pipeline {
 
         stage('Docker Build') {
             steps {
-                sh "${DOCKER_PATH} build -t ${DOCKER_IMAGE} ."
+                sh "docker build -t ${DOCKER_IMAGE} ."
             }
         }
 
         stage('Docker Push') {
             steps {
-                sh "${DOCKER_PATH} push ${DOCKER_IMAGE}"
+                sh "docker push ${DOCKER_IMAGE}"
             }
         }
     }
