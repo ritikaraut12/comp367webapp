@@ -1,27 +1,42 @@
+
 pipeline {
     agent any
-    tools {
-        maven 'Maven 3.9.9'  // This matches the name from Jenkins configuration
+
+    environment {
+        DOCKER_IMAGE = 'sujan958/maven-java-app'
+        DOCKER_CREDENTIALS_ID = 'docker-hub-credentials' // Add this in Jenkins
     }
+
     stages {
         stage('Checkout') {
             steps {
-                git branch: 'main', url: 'https://github.com/SujanChaudhari/comp367app.git'
+                 git branch: 'main', url: 'https://github.com/SujanChaudhari/comp367app.git'
             }
         }
-        stage('Build') {
+
+        stage('Build Maven Project') {
             steps {
                 sh 'mvn clean package'
             }
         }
-        stage('Test') {
+
+        stage('Docker Login') {
             steps {
-                sh 'mvn test'
+                withDockerRegistry([credentialsId: DOCKER_CREDENTIALS_ID, url: '']) {
+                    sh 'echo Logged into Docker Hub'
+                }
             }
         }
-        stage('Deploy') {
+
+        stage('Docker Build') {
             steps {
-                echo "Deploying application..."
+                sh "docker build -t ${DOCKER_IMAGE} ."
+            }
+        }
+
+        stage('Docker Push') {
+            steps {
+                sh "docker push ${DOCKER_IMAGE}"
             }
         }
     }
