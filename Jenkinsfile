@@ -4,31 +4,27 @@ pipeline {
     environment {
         // Docker image name and tag
         DOCKER_IMAGE = 'sujan958/maven-java-app:latest'
-        // Docker command path (ensure this is correct for your system)
+        // Full path to Docker
         DOCKER_CMD = '/Applications/Docker.app/Contents/Resources/bin/docker'
- // Updated to a more common path
-        // Docker Hub credentials (use Jenkins credentials ID)
-        DOCKER_CREDENTIALS_ID = 'docker-hub-credentials' // Replace with your Jenkins credentials ID
+        // Jenkins credentials ID
+        DOCKER_CREDENTIALS_ID = 'docker-hub-credentials'
     }
 
     stages {
         stage('Checkout') {
             steps {
-                // Pull source code from your configured SCM (GitHub, etc.)
                 checkout scm
             }
         }
 
         stage('Build Maven Project') {
             steps {
-                // Ensure Maven is installed and in PATH
                 sh 'mvn clean package'
             }
         }
 
         stage('Docker Debug') {
             steps {
-                // Debugging: Check Docker setup
                 sh 'echo "Current user: $(whoami)"'
                 sh 'echo "PATH is: $PATH"'
                 sh "${DOCKER_CMD} --version"
@@ -39,7 +35,6 @@ pipeline {
 
         stage('Docker Login') {
             steps {
-                // Log in to Docker Hub using Jenkins credentials
                 withCredentials([usernamePassword(
                     credentialsId: env.DOCKER_CREDENTIALS_ID,
                     usernameVariable: 'DOCKER_USER',
@@ -47,7 +42,7 @@ pipeline {
                 )]) {
                     sh """
                         echo "Attempting to log in to Docker Hub..."
-                        ${DOCKER_CMD} login -u ${DOCKER_USER} -p ${DOCKER_PASS}
+                        echo \$DOCKER_PASS | ${DOCKER_CMD} login -u \$DOCKER_USER --password-stdin
                         echo "Login Successful"
                     """
                 }
@@ -56,14 +51,12 @@ pipeline {
 
         stage('Docker Build') {
             steps {
-                // Build the Docker image
                 sh "${DOCKER_CMD} build -t ${DOCKER_IMAGE} ."
             }
         }
 
         stage('Docker Push') {
             steps {
-                // Push the Docker image to Docker Hub
                 sh "${DOCKER_CMD} push ${DOCKER_IMAGE}"
             }
         }
@@ -77,7 +70,6 @@ pipeline {
             echo "Pipeline failed. Check the logs for details."
         }
         cleanup {
-            // Clean up Docker resources (optional)
             sh "${DOCKER_CMD} system prune -f"
         }
     }
