@@ -2,48 +2,52 @@ pipeline {
     agent any
 
     environment {
-        // Docker image name and tag
-        DOCKER_IMAGE = 'sujan958/maven-java-app:latest'
-        // Full path to Docker
-        DOCKER_CMD = '/Applications/Docker.app/Contents/Resources/bin/docker'
-        // Jenkins credentials ID
+        // Docker image name and tag (update with your Docker Hub username)
+        DOCKER_IMAGE = 'ritikaraut/maven-java-app:latest'
+        // Use 'docker' command (assumed to be in PATH on Windows)
+        DOCKER_CMD = 'docker'
+        // Jenkins credentials ID for Docker Hub
         DOCKER_CREDENTIALS_ID = 'docker-hub-credentials'
     }
 
     stages {
         stage('Checkout') {
             steps {
+                // Check out source code from SCM (Git)
                 checkout scm
             }
         }
 
         stage('Build Maven Project') {
             steps {
-                sh 'mvn clean package'
+                // Build the Maven project; ensure Maven is installed and in PATH
+                bat 'mvn clean package'
             }
         }
 
         stage('Docker Debug') {
             steps {
-                sh 'echo "Current user: $(whoami)"'
-                sh 'echo "PATH is: $PATH"'
-                sh "${DOCKER_CMD} --version"
-                sh "${DOCKER_CMD} images"
-                sh "${DOCKER_CMD} ps -a"
+                // Debug: show current user and PATH, check Docker version, images, and running containers
+                bat 'echo Current user: %USERNAME%'
+                bat 'echo PATH is: %PATH%'
+                bat "${DOCKER_CMD} --version"
+                bat "${DOCKER_CMD} images"
+                bat "${DOCKER_CMD} ps -a"
             }
         }
 
         stage('Docker Login') {
             steps {
+                // Log in to Docker Hub using Jenkins credentials
                 withCredentials([usernamePassword(
-                    credentialsId: env.DOCKER_CREDENTIALS_ID,
+                    credentialsId: "${DOCKER_CREDENTIALS_ID}",
                     usernameVariable: 'DOCKER_USER',
                     passwordVariable: 'DOCKER_PASS'
                 )]) {
-                    sh """
-                        echo "Attempting to log in to Docker Hub..."
-                        echo \$DOCKER_PASS | ${DOCKER_CMD} login -u \$DOCKER_USER --password-stdin
-                        echo "Login Successful"
+                    bat """
+                        echo Attempting to log in to Docker Hub...
+                        echo %DOCKER_PASS% | ${DOCKER_CMD} login -u %DOCKER_USER% --password-stdin
+                        echo Login Successful
                     """
                 }
             }
@@ -51,13 +55,15 @@ pipeline {
 
         stage('Docker Build') {
             steps {
-                sh "${DOCKER_CMD} build -t ${DOCKER_IMAGE} ."
+                // Build the Docker image using the Dockerfile in the project root
+                bat "${DOCKER_CMD} build -t ${DOCKER_IMAGE} ."
             }
         }
 
         stage('Docker Push') {
             steps {
-                sh "${DOCKER_CMD} push ${DOCKER_IMAGE}"
+                // Push the Docker image to Docker Hub
+                bat "${DOCKER_CMD} push ${DOCKER_IMAGE}"
             }
         }
     }
@@ -70,7 +76,8 @@ pipeline {
             echo "Pipeline failed. Check the logs for details."
         }
         cleanup {
-            sh "${DOCKER_CMD} system prune -f"
+            // Clean up Docker resources (optional)
+            bat "${DOCKER_CMD} system prune -f"
         }
     }
 }

@@ -1,22 +1,13 @@
-# Use an official Maven image as base
-FROM maven:3.8.6-openjdk-11 AS build
-
-# Set working directory
-WORKDIR /app
-
-# Copy project files
-COPY . .
-
-# Build Maven project
-RUN mvn clean package
-
-# Use Tomcat as a runtime environment
+ # Use Tomcat as the base image
 FROM tomcat:9.0
 
-# Copy built .war file from previous stage
-COPY --from=build /app/target/*.war /usr/local/tomcat/webapps/app.war
+# Set working directory inside container
+WORKDIR /usr/local/tomcat/webapps/
 
-# Expose the port
+# Copy the WAR file from the target folder (Ensure `mvn package` is run before this)
+COPY target/*.war app.war
+
+# Expose port 8080 for the application
 EXPOSE 8080
 
 # Start Tomcat
