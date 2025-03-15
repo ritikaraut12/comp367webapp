@@ -3,7 +3,7 @@ pipeline {
 
     environment {
         DOCKER_IMAGE = 'ritikaraut/maven-java-app:latest'
-        DOCKER_CMD = '"C:/Program Files/Docker/Docker/resources/bin/docker.exe"'
+        DOCKER_CMD = 'docker'
         DOCKER_CREDENTIALS_ID = 'docker-hub-credentials'
     }
 
