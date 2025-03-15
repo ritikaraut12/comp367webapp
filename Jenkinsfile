@@ -68,6 +68,6 @@ pipeline {
         }
         cleanup {
             bat "${DOCKER_CMD} system prune -f"
-        }
-    }
+        }
+    }
 }
