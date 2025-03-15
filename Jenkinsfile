@@ -2,7 +2,7 @@ pipeline {
     agent any
 
     environment {
-        DOCKER_IMAGE = 'ritikraut/maven-java-app:latest'
+        DOCKER_IMAGE = 'ritikaraut/maven-java-app:latest'
         DOCKER_CMD = 'docker'
         DOCKER_CREDENTIALS_ID = 'docker-hub-credentials'
     }
